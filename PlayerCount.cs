@@ -1,14 +1,19 @@
 ﻿using System;
 using System.Linq;
 using Oxide.Core.Libraries.Covalence;
+using System.Collections.Generic;
+using Oxide.Core.Plugins;
 
 namespace Oxide.Plugins
 {
-    [Info("PlayerCount", "[4ga] RAR", "1.4.0")]
+    [Info("PlayerCount", "[4ga] RAR", "1.5.0")]
     [Description("Shows players count")]
     class PlayerCount : CovalencePlugin
     {
         #region Initialization
+        [PluginReference]
+        private Plugin BetterChat;
+        //TODO change fields to JSON property
         private string onlineMessage;
         private string commands;
         private string prefix;
@@ -55,6 +60,29 @@ namespace Oxide.Plugins
 
         private object OnUserChat(IPlayer player, string message)
         {
+            if (BetterChat != null)
+                return true;
+            if (CheckIfCommand(player, message))
+            {
+                return true;
+            }
+            return null;
+        }
+
+        private object OnBetterChat(Dictionary<string, object> data)
+        {
+            IPlayer player = data["Player"] as IPlayer;
+            string message = data["Message"] as string;
+
+            if (CheckIfCommand(player, message))
+            {
+                return true;
+            }
+            return data;
+        }
+
+        private bool CheckIfCommand(IPlayer player, string message)
+        {
             if (message.StartsWith("!"))
             {
                 message = message.Substring(1);
@@ -67,7 +95,7 @@ namespace Oxide.Plugins
                     }
                 }
             }
-            return null;
+            return false;
         }
         #endregion
 

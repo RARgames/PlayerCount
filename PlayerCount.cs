@@ -1,14 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using ConVar;
-using Oxide.Core;
 using Oxide.Core.Libraries.Covalence;
-
 
 namespace Oxide.Plugins
 {
-    [Info("PlayerCount", "[4ga] RAR", "1.3.0")]
+    [Info("PlayerCount", "[4ga] RAR", "1.4.0")]
     [Description("Shows players count")]
     class PlayerCount : CovalencePlugin
     {

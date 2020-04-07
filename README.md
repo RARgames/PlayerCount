@@ -1,4 +1,4 @@
-#Player Count
+# Player Count
 
 Show customizable player count message with custom server icon, prefix and commands.
 

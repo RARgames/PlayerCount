@@ -1,61 +1,83 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using Oxide.Core.Libraries.Covalence;
 using System.Collections.Generic;
 using Oxide.Core.Plugins;
+using Oxide.Core;
+using Newtonsoft.Json;
+using System.IO;
 
 namespace Oxide.Plugins
 {
-    [Info("PlayerCount", "[4ga] RAR", "1.5.0")]
+    [Info("PlayerCount", "[4ga] RAR", "2.0.0")]
     [Description("Shows players count")]
     class PlayerCount : CovalencePlugin
     {
-        #region Initialization
+        #region Init
         [PluginReference]
         private Plugin BetterChat;
-        //TODO change fields to JSON property
-        private string onlineMessage;
-        private string commands;
-        private string prefix;
-        private string steamAvatarId;
 
-        private string[] commandsArray;
-        private ulong steamAvatarIdFormatted;
+        private Settings settings;
 
-        private void Init()
+        public class Settings
         {
-            LoadDefaultConfig();
-            commandsArray = commands.Split(';'); //Split commands into string array
-            if (commandsArray[commandsArray.Length - 1] == "") //Remove last array element if empty
+            [JsonProperty(PropertyName = "Online Message")]
+            public string OnlineMessage { get; set; } = "{onlinePlayers}/{maxPlayers} Online ({joiningPlayers} Joining {queuedPlayers} Queued)";
+
+            [JsonProperty(PropertyName = "Prefix")]
+            public string Prefix { get; set; } = "<color=#FFA500>[4ga]</color>";
+
+            [JsonProperty(PropertyName = "Steam Avatar Id")]
+            public ulong SteamAvatarId { get; set; } = 76561198273760551;
+
+            [JsonProperty(PropertyName = "Command List")]
+            public List<string> CommandList { get; set; } = new List<string>(new string[] { "online", "players", "pop"});
+        }
+
+        protected override void LoadConfig()
+        {
+            base.LoadConfig();
+            try
             {
-                commandsArray = commandsArray.Take(commandsArray.Length - 1).ToArray();
+                settings = Config.ReadObject<Settings>();
+                if (settings == null)
+                {
+                    LoadDefaultConfig();
+                }
             }
-            foreach (var c in commandsArray)
+            catch
             {
-                AddCovalenceCommand(c, "OnlineCommand"); //Register all commands
+                LoadDefaultConfig();
             }
-            steamAvatarIdFormatted = ulong.Parse(steamAvatarId);
+            SaveConfig();
         }
 
         protected override void LoadDefaultConfig()
         {
-            Config["Message"] = onlineMessage = GetConfig("Online message", "{onlinePlayers}/{maxPlayers} Online ({joiningPlayers} Joining {queuedPlayers} Queued)");
-            Config["Command List"] = commands = GetConfig("Command List", "online;players;pop;");
-            Config["Prefix"] = prefix = GetConfig("Prefix", "<color=#FFA500>[4ga]</color>");
-            Config["Steam Avatar Id"] = steamAvatarId = GetConfig("Steam Avatar Id", "76561198273760551");
-            SaveConfig();
+            string configPath = $"{Interface.Oxide.ConfigDirectory}{Path.DirectorySeparatorChar}{Name}.json";
+            LogWarning($"Could not load a valid configuration file, creating a new configuration file at {configPath}");
+            settings = new Settings();
+        }
+
+        protected override void SaveConfig() => Config.WriteObject(settings);
+
+        private void Init()
+        {
+            foreach (var command in settings.CommandList)
+            {
+                AddCovalenceCommand(command, "OnlineCommand"); //Register all commands
+            }
         }
         #endregion
 
         #region Commands
         private void OnlineCommand(IPlayer player)
         {
-            string displayText = onlineMessage.Replace("{onlinePlayers}", players.Connected.Count().ToString())
+            string displayText = settings.OnlineMessage.Replace("{onlinePlayers}", players.Connected.Count().ToString())
                 .Replace("{maxPlayers}", server.MaxPlayers.ToString())
                 .Replace("{queuedPlayers}", ServerMgr.Instance.connectionQueue.Queued.ToString())
                 .Replace("{joiningPlayers}", ServerMgr.Instance.connectionQueue.Joining.ToString());
 
-            Message(player, prefix, displayText, steamAvatarIdFormatted);
+            Message(player, settings.Prefix, displayText, settings.SteamAvatarId);
         }
 
         private object OnUserChat(IPlayer player, string message)
@@ -86,9 +108,9 @@ namespace Oxide.Plugins
             if (message.StartsWith("!"))
             {
                 message = message.Substring(1);
-                foreach (var c in commandsArray)
+                foreach (var command in settings.CommandList)
                 {
-                    if (string.Compare(c, message) == 0)
+                    if (string.Compare(command, message) == 0)
                     {
                         OnlineCommand(player);
                         return true;
@@ -100,8 +122,6 @@ namespace Oxide.Plugins
         #endregion
 
         #region Helpers
-        T GetConfig<T>(string name, T value) => Config[name] == null ? value : (T)Convert.ChangeType(Config[name], typeof(T));
-
         private void Message(IPlayer player, string prefix, string message, ulong userId) //TODO when possible switch to Universal API
         {
             var basePlayer = player.Object as BasePlayer;

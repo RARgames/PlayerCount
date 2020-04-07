@@ -8,7 +8,7 @@ using System.IO;
 
 namespace Oxide.Plugins
 {
-    [Info("PlayerCount", "[4ga] RAR", "2.0.0")]
+    [Info("PlayerCount", "[4ga] RAR", "2.0.1")]
     [Description("Shows players count")]
     class PlayerCount : CovalencePlugin
     {
@@ -30,7 +30,7 @@ namespace Oxide.Plugins
             public ulong SteamAvatarId { get; set; } = 76561198273760551;
 
             [JsonProperty(PropertyName = "Command List")]
-            public List<string> CommandList { get; set; } = new List<string>(new string[] { "online", "players", "pop"});
+            public List<string> CommandList { get; set; } = new List<string> { "online", "players", "pop" };
         }
 
         protected override void LoadConfig()

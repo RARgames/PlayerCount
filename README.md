@@ -1,3 +1,7 @@
+#Player Count
+
+Show customizable player count message with custom server icon, prefix and commands.
+
 In `OnlineMessage` you can use tags:
 - `{onlinePlayers}` - for number of currently connected players
 - `{maxPlayers}` - for number of server max slots

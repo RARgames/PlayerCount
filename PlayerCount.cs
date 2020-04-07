@@ -8,7 +8,7 @@ using System.IO;
 
 namespace Oxide.Plugins
 {
-    [Info("PlayerCount", "[4ga] RAR", "2.0.1")]
+    [Info("PlayerCount", "[4ga] RAR", "2.0.2")]
     [Description("Shows players count")]
     class PlayerCount : CovalencePlugin
     {
@@ -30,7 +30,7 @@ namespace Oxide.Plugins
             public ulong SteamAvatarId { get; set; } = 76561198273760551;
 
             [JsonProperty(PropertyName = "Command List")]
-            public List<string> CommandList { get; set; } = new List<string> { "online", "players", "pop" };
+            public List<string> CommandList { get; set; } = new List<string>();
         }
 
         protected override void LoadConfig()
@@ -56,6 +56,9 @@ namespace Oxide.Plugins
             string configPath = $"{Interface.Oxide.ConfigDirectory}{Path.DirectorySeparatorChar}{Name}.json";
             LogWarning($"Could not load a valid configuration file, creating a new configuration file at {configPath}");
             settings = new Settings();
+            settings.CommandList.Add("online");
+            settings.CommandList.Add("pop");
+            settings.CommandList.Add("players");
         }
 
         protected override void SaveConfig() => Config.WriteObject(settings);
